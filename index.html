@@ -1,2 +1,111 @@
-!DOCTYPE
-!DOCTYPE #html html
+
+from pathlib import Path
+import zipfile
+
+root = Path("/mnt/data/topup-game")
+root.mkdir(exist_ok=True)
+
+html = r'''<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TopUpKu — Top Up Game</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#0b1020;color:#fff}
+header{padding:22px 7%;display:flex;justify-content:space-between;align-items:center;background:#111936}
+.logo{font-size:24px;font-weight:800;color:#7c5cff}.hero{padding:55px 7%;background:linear-gradient(135deg,#151d42,#0b1020)}
+.hero h1{font-size:42px;margin:0 0 12px}.hero p{color:#b9c0d8}
+.container{max-width:1000px;margin:30px auto;padding:0 20px}.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px}
+.game,.card{background:#151d36;border:1px solid #273154;border-radius:15px;padding:20px}.game{cursor:pointer;text-align:center;transition:.2s}.game:hover,.game.active{border-color:#7c5cff;transform:translateY(-2px)}
+.icon{font-size:38px;margin-bottom:8px}.card{margin-top:25px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+label{display:block;margin:12px 0 7px;color:#cbd2e8}input,select{width:100%;padding:13px;border-radius:9px;border:1px solid #343e63;background:#0d1429;color:white}
+.nominals{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}.nominal{padding:13px;background:#0d1429;border:1px solid #343e63;border-radius:9px;color:white;cursor:pointer}.nominal.selected{border-color:#7c5cff;background:#241d51}
+button{width:100%;padding:14px;border:0;border-radius:10px;background:#7c5cff;color:#fff;font-weight:700;cursor:pointer;margin-top:20px}
+#summary{line-height:1.8;color:#dce1f2}.notice{padding:12px;border-radius:9px;background:#10263a;color:#a9dcff;margin-top:15px;font-size:14px}
+footer{text-align:center;color:#78809c;padding:35px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.hero h1{font-size:32px}}
+</style>
+</head>
+<body>
+<header><div class="logo">TopUpKu</div><span>⚡ Cepat & Praktis</span></header>
+<section class="hero"><h1>Top Up Game Favoritmu</h1><p>Pilih game, masukkan ID, pilih nominal, lalu checkout.</p></section>
+<main class="container">
+<h2>Pilih Game</h2>
+<div class="games" id="games">
+<div class="game active" data-game="Free Fire"><div class="icon">🔥</div><b>Free Fire</b></div>
+<div class="game" data-game="Mobile Legends"><div class="icon">⚔️</div><b>Mobile Legends</b></div>
+<div class="game" data-game="PUBG Mobile"><div class="icon">🎯</div><b>PUBG Mobile</b></div>
+<div class="game" data-game="Genshin Impact"><div class="icon">✨</div><b>Genshin Impact</b></div>
+</div>
+
+<div class="card">
+<h2>Detail Top Up</h2>
+<div class="grid">
+<div>
+<label>Game</label><input id="game" value="Free Fire" readonly>
+<label>User ID</label><input id="uid" placeholder="Masukkan User ID">
+<label>Server ID (jika diperlukan)</label><input id="server" placeholder="Contoh: 1234">
+</div>
+<div>
+<label>Nominal</label>
+<div class="nominals">
+<button class="nominal" data-price="5000" data-item="70 Diamonds">70 Diamonds<br>Rp5.000</button>
+<button class="nominal" data-price="10000" data-item="140 Diamonds">140 Diamonds<br>Rp10.000</button>
+<button class="nominal" data-price="20000" data-item="355 Diamonds">355 Diamonds<br>Rp20.000</button>
+<button class="nominal" data-price="50000" data-item="720 Diamonds">720 Diamonds<br>Rp50.000</button>
+</div>
+<label>Metode Pembayaran</label>
+<select id="payment"><option>QRIS</option><option>DANA</option><option>GoPay</option><option>OVO</option></select>
+</div>
+</div>
+<div class="notice">Demo website: pembayaran dan pengiriman item belum terhubung ke payment gateway/API distributor.</div>
+<button onclick="checkout()">Checkout Sekarang</button>
+</div>
+
+<div class="card" id="result" style="display:none">
+<h2>Ringkasan Pesanan</h2><div id="summary"></div>
+</div>
+</main>
+<footer>© 2026 TopUpKu — Demo website top up game</footer>
+<script>
+let selected=null;
+document.querySelectorAll('.game').forEach(el=>el.onclick=()=>{
+ document.querySelectorAll('.game').forEach(x=>x.classList.remove('active'));
+ el.classList.add('active'); document.getElementById('game').value=el.dataset.game;
+});
+document.querySelectorAll('.nominal').forEach(el=>el.onclick=()=>{
+ document.querySelectorAll('.nominal').forEach(x=>x.classList.remove('selected'));
+ el.classList.add('selected'); selected=el;
+});
+function checkout(){
+ const uid=document.getElementById('uid').value.trim();
+ if(!uid||!selected){alert('Masukkan User ID dan pilih nominal terlebih dahulu.');return}
+ const price=Number(selected.dataset.price).toLocaleString('id-ID');
+ document.getElementById('summary').innerHTML=
+ `Game: <b>${document.getElementById('game').value}</b><br>
+ User ID: <b>${uid}</b><br>
+ Server ID: <b>${document.getElementById('server').value||'-'}</b><br>
+ Item: <b>${selected.dataset.item}</b><br>
+ Pembayaran: <b>${document.getElementById('payment').value}</b><br>
+ Total: <b>Rp${price}</b>`;
+ document.getElementById('result').style.display='block';
+ document.getElementById('result').scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>'''
+
+(root/"index.html").write_text(html, encoding="utf-8")
+readme = """TopUpKu Demo
+Buka index.html di browser untuk menjalankan website.
+Ini adalah template frontend/demo. Untuk transaksi sungguhan, hubungkan backend, payment gateway resmi, database, dan API distributor top-up yang sah.
+"""
+(root/"README.txt").write_text(readme, encoding="utf-8")
+
+zip_path = Path("/mnt/data/TopUpKu-Website.zip")
+with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
+    for f in root.iterdir():
+        z.write(f, f.name)
+
+print(f"[Download website TopUpKu](sandbox:{zip_path})")
